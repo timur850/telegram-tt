@@ -16,9 +16,6 @@ on:
         required: false
         default: false
         type: boolean
-  push:
-    branches:
-      - master
 
 env:
   IS_ON_MASTER: ${{ github.ref == 'refs/heads/master' }}
