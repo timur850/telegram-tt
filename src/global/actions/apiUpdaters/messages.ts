@@ -29,6 +29,7 @@ import {
   consumeOwnDeletedId,
   getTimurGramSetting,
   hasTimurGramDeletedNote,
+  saveEditedNote,
   TIMURGRAM_DELETED_NOTE,
   TIMURGRAM_EDITED_PREFIX,
 } from '../../../util/timurgram';
@@ -630,13 +631,13 @@ addActionHandler('apiUpdate', (global, actions, update): ActionReturnType => {
       const currentMessage = selectChatMessage(global, chatId, id);
 
       if (currentMessage && shouldKeepEditedText(currentMessage, message)) {
+        const editNote = `${TIMURGRAM_EDITED_PREFIX}${currentMessage.content.text!.text}`;
+        saveEditedNote(chatId, id, editNote);
         message = {
           ...message,
           content: {
             ...message.content,
-            text: appendTimurGramNote(
-              message.content!.text, `${TIMURGRAM_EDITED_PREFIX}${currentMessage.content.text!.text}`,
-            ),
+            text: appendTimurGramNote(message.content!.text, editNote),
           },
         };
       }

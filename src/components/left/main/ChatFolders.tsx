@@ -23,6 +23,7 @@ import useLang from '../../../hooks/useLang';
 import useLastCallback from '../../../hooks/useLastCallback';
 import useScrolledState from '../../../hooks/useScrolledState';
 import useShowTransition from '../../../hooks/useShowTransition';
+import useTimurGramSettings from '../../../hooks/useTimurGramSettings';
 
 import StoryRibbon from '../../story/StoryRibbon';
 import Transition from '../../ui/Transition';
@@ -95,12 +96,14 @@ const ChatFolders = ({
     updateScrollState(activeList ?? undefined);
   }, [activeChatFolder, updateScrollState]);
 
+  const { hideStories } = useTimurGramSettings();
+
   const {
     ref,
     shouldRender: shouldRenderStoryRibbon,
     getIsClosing: getIsStoryRibbonClosing,
   } = useShowTransition({
-    isOpen: isStoryRibbonShown,
+    isOpen: isStoryRibbonShown && !hideStories,
     className: false,
     withShouldRender: true,
   });

@@ -57,6 +57,7 @@ import useCollapsibleLines from '../../../hooks/element/useCollapsibleLines';
 import useEffectWithPrevDeps from '../../../hooks/useEffectWithPrevDeps';
 import useLang from '../../../hooks/useLang';
 import useLastCallback from '../../../hooks/useLastCallback';
+import useTimurGramSettings from '../../../hooks/useTimurGramSettings';
 
 import Island, { IslandDescription } from '../../gili/layout/Island';
 import Switch from '../../gili/primitives/Switch';
@@ -163,6 +164,7 @@ const ChatExtra = ({
   } = user || {};
   const { id: chatId, usernames: chatUsernames } = chat || {};
   const peerId = userId || chatId;
+  const { showIds } = useTimurGramSettings();
   const {
     businessLocation,
     businessWorkHours,
@@ -507,6 +509,19 @@ const ChatExtra = ({
         )}
         {birthday && (
           <UserBirthday key={peerId} birthday={birthday} user={user!} isInSettings={isInSettings} />
+        )}
+        {showIds && peerId && (
+          <ListItem
+            icon="info"
+            iconBg="gray"
+            multiline
+            narrow
+            ripple
+            onClick={() => copy(peerId, 'TextCopied')}
+          >
+            <span className="title">{peerId}</span>
+            <span className="subtitle">ID</span>
+          </ListItem>
         )}
         {hasMainMiniApp && (
           <ListItem

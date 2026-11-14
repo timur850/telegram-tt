@@ -27,6 +27,7 @@ import useConnectionStatus from '../../../hooks/useConnectionStatus';
 import { useHotkeys } from '../../../hooks/useHotkeys';
 import useLang from '../../../hooks/useLang';
 import useLastCallback from '../../../hooks/useLastCallback';
+import useTimurGramSettings from '../../../hooks/useTimurGramSettings';
 
 import Icon from '../../common/icons/Icon';
 import MainMenuDropdown from '../../common/MainMenuDropdown';
@@ -211,7 +212,9 @@ const LeftMainHeader = ({
     ? lang('SearchFriends')
     : lang('Search');
 
-  const withStoryToggler = !isSearchFocused && !selectedSearchDate && !globalSearchChatId && !areContactsVisible;
+  const { hideStories } = useTimurGramSettings();
+  const withStoryToggler = !hideStories && !isSearchFocused && !selectedSearchDate && !globalSearchChatId
+    && !areContactsVisible;
 
   const searchContent = useMemo(() => {
     return (

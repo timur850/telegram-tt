@@ -521,6 +521,7 @@ async function ensureWorkerPing() {
 function shouldSkipForTimurGram(fnName: keyof Methods) {
   if (fnName === 'sendMessageAction') return getTimurGramSetting('hideTyping');
   if (fnName === 'markMessageListRead') return getTimurGramSetting('hideRead');
+  if (fnName === 'fetchSponsoredMessages') return getTimurGramSetting('hideSponsored');
 
   return false;
 }

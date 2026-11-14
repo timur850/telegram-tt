@@ -1,10 +1,9 @@
-import { memo, useMemo, useState } from '../../../lib/teact/teact';
+import { memo, useMemo } from '../../../lib/teact/teact';
 import { getActions, withGlobal } from '../../../global';
 
 import type { ApiUser } from '../../../api/types';
 import type { GlobalState } from '../../../global/types';
 import type { AnimationLevel, ThemeKey } from '../../../types';
-import type { TimurGramSettingKey } from '../../../util/timurgram';
 import { SettingsScreens } from '../../../types';
 
 import {
@@ -32,7 +31,6 @@ import { IS_MULTIACCOUNT_SUPPORTED, IS_TAURI } from '../../../util/browser/globa
 import { getPromptInstall } from '../../../util/installPrompt';
 import { switchPermanentWebVersion } from '../../../util/permanentWebVersion';
 import { getSystemTheme } from '../../../util/systemTheme';
-import { getTimurGramSettings, setTimurGramSetting } from '../../../util/timurgram';
 
 import useFlag from '../../../hooks/useFlag';
 import { useFolderManagerForUnreadCounters } from '../../../hooks/useFolderManager';
@@ -47,14 +45,7 @@ import NestedMenuItem from '../../ui/NestedMenuItem';
 import Switcher from '../../ui/Switcher';
 import Toggle from '../../ui/Toggle';
 import AccountMenuItems from './AccountMenuItems';
-
-const TIMURGRAM_ITEMS: { key: TimurGramSettingKey; icon: 'eye-crossed' | 'keyboard' | 'message-read' | 'delete' | 'edit'; title: string }[] = [
-  { key: 'hideOnline', icon: 'eye-crossed', title: 'Скрывать «онлайн»' },
-  { key: 'hideTyping', icon: 'keyboard', title: 'Скрывать «печатает…»' },
-  { key: 'hideRead', icon: 'message-read', title: 'Читать без галочек' },
-  { key: 'keepDeleted', icon: 'delete', title: 'Сохранять удалённые' },
-  { key: 'keepEdits', icon: 'edit', title: 'Показывать правки' },
-];
+import TimurGramMenuItem from './TimurGramMenuItem';
 
 type OwnProps = {
   onSelectSettings: NoneToVoidFunction;
@@ -110,13 +101,6 @@ const LeftSideMenuItems = ({
   } = getActions();
   const lang = useLang();
   const [isSwitchToWebKDialogOpen, openSwitchToWebKDialog, closeSwitchToWebKDialog] = useFlag();
-  const [timurGramSettings, setTimurGramSettings] = useState(getTimurGramSettings);
-
-  const handleTimurGramToggle = useLastCallback((e: React.SyntheticEvent<HTMLElement>, key: TimurGramSettingKey) => {
-    e.stopPropagation();
-    setTimurGramSetting(key, !timurGramSettings[key]);
-    setTimurGramSettings(getTimurGramSettings());
-  });
 
   const animationLevelValue = animationLevel !== ANIMATION_LEVEL_MIN
     ? (animationLevel === ANIMATION_LEVEL_MAX ? 'max' : 'mid') : 'min';
@@ -259,30 +243,7 @@ const LeftSideMenuItems = ({
       >
         {lang('MenuSettings')}
       </MenuItem>
-      <NestedMenuItem
-        icon="eye-crossed"
-        submenu={(
-          <>
-            {TIMURGRAM_ITEMS.map(({ key, icon, title }) => (
-              <MenuItem
-                key={key}
-                icon={icon}
-                onClick={(e) => handleTimurGramToggle(e, key)}
-              >
-                <span className="menu-item-name">{title}</span>
-                <Switcher
-                  id={`timurgram-${key}`}
-                  label={title}
-                  checked={Boolean(timurGramSettings[key])}
-                  noAnimation
-                />
-              </MenuItem>
-            ))}
-          </>
-        )}
-      >
-        TimurGram
-      </NestedMenuItem>
+      <TimurGramMenuItem />
       <NestedMenuItem
         icon="more"
         footer={footer}

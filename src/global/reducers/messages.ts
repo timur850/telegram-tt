@@ -22,6 +22,7 @@ import {
 } from '../../util/iteratees';
 import { isLocalMessageId, type MessageKey } from '../../util/keys/messageKey';
 import { unload } from '../../util/mediaLoader';
+import { applyStoredEditNotes } from '../../util/timurgram';
 import {
   buildAnchoredEphemeralMessage,
   getAllMessageMediaHashes,
@@ -299,7 +300,7 @@ export function replaceMessages<T extends GlobalState>(
     const currentById = selectChatMessages(global, chatId) || {};
     const newById = {
       ...currentById,
-      ...updatedByChatId[chatId],
+      ...applyStoredEditNotes(updatedByChatId[chatId]),
     };
     global = replaceChatMessages(global, chatId, newById);
   });
@@ -317,7 +318,7 @@ export function addChatMessagesById<T extends GlobalState>(
   }
 
   return replaceChatMessages(global, chatId, {
-    ...newById,
+    ...applyStoredEditNotes(newById),
     ...byId,
   });
 }
