@@ -24,7 +24,7 @@ jobs:
       TELEGRAM_API_ID: '38488754'
       TELEGRAM_API_HASH: '6db935d7449a019f607a07ae63db389b'
       BASE_URL: https://timur850.github.io/telegram-tt/
-      APP_TITLE: TimurGram
+      APP_TITLE: NextGram
     steps:
       - uses: actions/checkout@v4
 

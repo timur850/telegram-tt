@@ -3,13 +3,14 @@ import type { Plugin } from 'vite';
 type Options = {
   id?: string;
   isProductionApp: boolean;
+  appName?: string;
 };
 
 const MANIFEST_FILE_NAME = 'site.webmanifest';
 const APPLE_MANIFEST_FILE_NAME = 'site_apple.webmanifest';
 const MANIFEST_ICON_SIZES = [192, 512];
 
-export default function buildWebManifestPlugin({ id, isProductionApp }: Options): Plugin {
+export default function buildWebManifestPlugin({ id, isProductionApp, appName }: Options): Plugin {
   const devSuffix = isProductionApp ? '' : '-dev';
   const maskableIcon = {
     src: `icon-maskable${devSuffix}-512x512.png`,
@@ -18,8 +19,8 @@ export default function buildWebManifestPlugin({ id, isProductionApp }: Options)
     purpose: 'maskable',
   };
   const manifests = {
-    [MANIFEST_FILE_NAME]: buildManifest(id, isProductionApp, [...buildIcons(`icon${devSuffix}`), maskableIcon]),
-    [APPLE_MANIFEST_FILE_NAME]: buildManifest(id, isProductionApp, buildIcons(`icon-square${devSuffix}`)),
+    [MANIFEST_FILE_NAME]: buildManifest(id, isProductionApp, [...buildIcons(`icon${devSuffix}`), maskableIcon], appName),
+    [APPLE_MANIFEST_FILE_NAME]: buildManifest(id, isProductionApp, buildIcons(`icon-square${devSuffix}`), appName),
   };
 
   return {
@@ -45,8 +46,8 @@ export default function buildWebManifestPlugin({ id, isProductionApp }: Options)
   };
 }
 
-function buildManifest(id: string | undefined, isProductionApp: boolean, icons: object[]) {
-  const name = isProductionApp ? 'Telegram Web' : 'Telegram Web Beta';
+function buildManifest(id: string | undefined, isProductionApp: boolean, icons: object[], appName?: string) {
+  const name = appName || (isProductionApp ? 'Telegram Web' : 'Telegram Web Beta');
 
   return JSON.stringify({
     id,

@@ -108,6 +108,7 @@ export default defineConfig(async ({ mode }): Promise<UserConfig> => {
       // Matches the identity browsers already derive from `start_url` for installed production apps
       id: isProductionApp ? publicUrl.pathname : undefined,
       isProductionApp,
+      appName: env.APP_TITLE,
     }),
     viteStaticCopy({ targets: WATCHED_STATIC_COPY_TARGETS }),
     viteStaticCopy({
