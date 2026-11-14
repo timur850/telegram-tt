@@ -14,6 +14,7 @@ import { getCurrentTabId, subscribeToMasterChange } from '../../../util/establis
 import generateUniqueId from '../../../util/generateUniqueId';
 import { ACCOUNT_SLOT, DATA_BROADCAST_CHANNEL_NAME } from '../../../util/multiaccount';
 import { pause, throttleWithTickEnd } from '../../../util/schedulers';
+import { getTimurGramSetting } from '../../../util/timurgram';
 
 type RequestState = {
   messageId: string;
@@ -261,6 +262,15 @@ export function callApiLocal<T extends keyof Methods>(
 }
 
 export function callApi<T extends keyof Methods>(fnName: T, ...args: MethodArgs<T>): EnsurePromise<MethodResponse<T>> {
+  if (shouldSkipForTimurGram(fnName)) {
+    return Promise.resolve(undefined) as EnsurePromise<MethodResponse<T>>;
+  }
+
+  if (fnName === 'updateIsOnline' && getTimurGramSetting('hideOnline')) {
+    // Keep the account offline for others
+    args = [false] as MethodArgs<T>;
+  }
+
   if (!isInited && isMasterTab) {
     if (NO_QUEUE_BEFORE_INIT.has(fnName)) {
       return Promise.resolve(undefined) as EnsurePromise<MethodResponse<T>>;
@@ -506,4 +516,11 @@ async function ensureWorkerPing() {
   } finally {
     isResolved = true;
   }
+}
+
+function shouldSkipForTimurGram(fnName: keyof Methods) {
+  if (fnName === 'sendMessageAction') return getTimurGramSetting('hideTyping');
+  if (fnName === 'markMessageListRead') return getTimurGramSetting('hideRead');
+
+  return false;
 }

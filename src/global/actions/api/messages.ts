@@ -70,6 +70,7 @@ import { getTranslationFn, type RegularLangFnParameters } from '../../../util/lo
 import { formatStarsAsText } from '../../../util/localization/format';
 import { debounce, onTickEnd, rafPromise } from '../../../util/schedulers';
 import { getServerTime } from '../../../util/serverTime';
+import { markOwnDeletedIds } from '../../../util/timurgram';
 import { cancelVideoAttachmentProcessing, processVideoAttachment } from '../../../util/videoProcessingQueue';
 import { callApi, cancelApiProgress } from '../../../api/gramjs';
 import {
@@ -1321,6 +1322,7 @@ addActionHandler('deleteMessages', (global, actions, payload): ActionReturnType 
     return;
   }
 
+  markOwnDeletedIds(messageIdsToDelete);
   void callApi('deleteMessages', { chat, messageIds: messageIdsToDelete, shouldDeleteForAll });
 
   const editingId = selectEditingId(global, chatId, threadId);

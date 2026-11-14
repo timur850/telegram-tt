@@ -24,6 +24,14 @@ import { buildSearchResultKey } from '../../../util/keys/searchResultKey';
 import { notifyAboutMessage } from '../../../util/notifications';
 import { onTickEnd } from '../../../util/schedulers';
 import { getServerTime } from '../../../util/serverTime';
+import {
+  appendTimurGramNote,
+  consumeOwnDeletedId,
+  getTimurGramSetting,
+  hasTimurGramDeletedNote,
+  TIMURGRAM_DELETED_NOTE,
+  TIMURGRAM_EDITED_PREFIX,
+} from '../../../util/timurgram';
 import { callApi } from '../../../api/gramjs';
 import {
   addPaidReaction,
@@ -615,10 +623,23 @@ addActionHandler('apiUpdate', (global, actions, update): ActionReturnType => {
 
     case 'updateMessage': {
       const {
-        chatId, id, message, poll, webPages, isFromNew, isFull, shouldForceReply,
+        chatId, id, poll, webPages, isFromNew, isFull, shouldForceReply,
       } = update;
+      let { message } = update;
 
       const currentMessage = selectChatMessage(global, chatId, id);
+
+      if (currentMessage && shouldKeepEditedText(currentMessage, message)) {
+        message = {
+          ...message,
+          content: {
+            ...message.content,
+            text: appendTimurGramNote(
+              message.content!.text, `${TIMURGRAM_EDITED_PREFIX}${currentMessage.content.text!.text}`,
+            ),
+          },
+        };
+      }
 
       if (message.reactions) {
         global = updateReactions(
@@ -999,7 +1020,20 @@ addActionHandler('apiUpdate', (global, actions, update): ActionReturnType => {
     case 'deleteMessages': {
       const { ids, chatId } = update;
 
-      deleteMessages(global, chatId, ids, actions);
+      if (!getTimurGramSetting('keepDeleted')) {
+        deleteMessages(global, chatId, ids, actions);
+        break;
+      }
+
+      const ownIds = ids.filter((id) => consumeOwnDeletedId(id));
+      const keptIds = ids.filter((id) => !ownIds.includes(id));
+
+      global = markMessagesAsDeleted(global, chatId, keptIds);
+      if (ownIds.length) {
+        deleteMessages(global, chatId, ownIds, actions);
+      } else {
+        setGlobal(global);
+      }
       break;
     }
 
@@ -1919,4 +1953,33 @@ function deleteScheduledMessages<T extends GlobalState>(
     global = deleteChatScheduledMessages(global, chatId, ids);
     setGlobal(global);
   }, ANIMATION_DELAY);
+}
+
+function shouldKeepEditedText(currentMessage: ApiMessage, message: Partial<ApiMessage>) {
+  if (!getTimurGramSetting('keepEdits') || currentMessage.isOutgoing) return false;
+
+  const oldText = currentMessage.content.text?.text;
+  const newText = message.content?.text?.text;
+
+  return Boolean(oldText && newText !== undefined && newText !== oldText
+    && message.editDate !== undefined && message.editDate !== currentMessage.editDate);
+}
+
+function markMessagesAsDeleted<T extends GlobalState>(global: T, chatId: string | undefined, ids: number[]) {
+  ids.forEach((id) => {
+    const messageChatId = chatId || selectCommonBoxChatId(global, id);
+    if (!messageChatId) return;
+
+    const message = selectChatMessage(global, messageChatId, id);
+    if (!message || message.content.action || hasTimurGramDeletedNote(message.content.text)) return;
+
+    global = updateChatMessage(global, messageChatId, id, {
+      content: {
+        ...message.content,
+        text: appendTimurGramNote(message.content.text, TIMURGRAM_DELETED_NOTE),
+      },
+    });
+  });
+
+  return global;
 }

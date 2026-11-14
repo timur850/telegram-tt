@@ -36,6 +36,10 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Type check
+        continue-on-error: true
+        run: npx tsc --noEmit
+
       - name: Build
         run: npm run build:production
 
