@@ -46,6 +46,7 @@ import { copyTextToClipboard } from '../../../util/clipboard';
 import { formatPhoneNumberWithCode } from '../../../util/phoneNumber';
 import stopEvent from '../../../util/stopEvent';
 import { extractCurrentThemeParams } from '../../../util/themeStyle';
+import { estimateRegistrationDate } from '../../../util/timurgram';
 import { ChatAnimationTypes } from '../../left/main/hooks';
 import formatUsername from '../helpers/formatUsername';
 import renderText from '../helpers/renderText';
@@ -165,6 +166,7 @@ const ChatExtra = ({
   const { id: chatId, usernames: chatUsernames } = chat || {};
   const peerId = userId || chatId;
   const { showIds } = useTimurGramSettings();
+  const registrationDate = showIds && userId ? estimateRegistrationDate(userId) : undefined;
   const {
     businessLocation,
     businessWorkHours,
@@ -520,7 +522,9 @@ const ChatExtra = ({
             onClick={() => copy(peerId, 'TextCopied')}
           >
             <span className="title">{peerId}</span>
-            <span className="subtitle">ID</span>
+            <span className="subtitle">
+              {registrationDate ? `ID · регистрация ${registrationDate}` : 'ID'}
+            </span>
           </ListItem>
         )}
         {hasMainMiniApp && (

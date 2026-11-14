@@ -1,7 +1,7 @@
 import type { ApiFormattedText, ApiMessage } from '../api/types';
 
 export type TimurGramSettingKey =
-  'hideOnline' | 'hideTyping' | 'hideRead'
+  'hideOnline' | 'hideTyping' | 'hideRead' | 'hideStoryViews' | 'hideListened'
   | 'keepDeleted' | 'keepEdits'
   | 'hideStories' | 'hideSponsored'
   | 'showIds';
@@ -46,6 +46,18 @@ export function getTimurGramSetting(key: TimurGramSettingKey) {
 
 export function setTimurGramSetting(key: TimurGramSettingKey, isEnabled: boolean) {
   updateSettings({ [key]: isEnabled });
+}
+
+export const TIMURGRAM_GHOST_KEYS: TimurGramSettingKey[] = [
+  'hideOnline', 'hideTyping', 'hideRead', 'hideStoryViews', 'hideListened',
+];
+
+export function getIsTimurGramGhostMode() {
+  return TIMURGRAM_GHOST_KEYS.every((key) => settings[key]);
+}
+
+export function setTimurGramGhostMode(isEnabled: boolean) {
+  updateSettings(Object.fromEntries(TIMURGRAM_GHOST_KEYS.map((key) => [key, isEnabled])));
 }
 
 export function cycleTimurGramAccentColor() {
@@ -171,4 +183,60 @@ function writeJson(key: string, value: unknown) {
   } catch (err) {
     // Storage can be unavailable in private mode
   }
+}
+
+// Known user ids with their approximate registration month, used for interpolation
+const REGISTRATION_POINTS: [number, number, number][] = [
+  [2768409, 2013, 11], [11538514, 2014, 4], [44634663, 2014, 11], [63263518, 2015, 3],
+  [101260938, 2015, 7], [122600695, 2016, 1], [152079341, 2016, 8], [181783990, 2016, 12],
+  [222021233, 2017, 3], [294851037, 2017, 8], [352940995, 2018, 1], [400169472, 2018, 4],
+  [681896077, 2018, 11], [796147074, 2019, 3], [925078064, 2019, 7], [1029255437, 2020, 1],
+  [1218917542, 2020, 7], [1543355823, 2021, 1], [1974255900, 2021, 7], [5000000000, 2021, 10],
+  [5400000000, 2022, 6], [5800000000, 2022, 11], [6000000000, 2023, 2], [6500000000, 2023, 8],
+  [7000000000, 2024, 3], [7500000000, 2024, 9], [8000000000, 2025, 2], [8500000000, 2025, 9],
+];
+const MONTHS_IN_YEAR = 12;
+const MONTH_NAMES = [
+  'янв.', 'февр.', 'март', 'апр.', 'май', 'июнь', 'июль', 'авг.', 'сент.', 'окт.', 'нояб.', 'дек.',
+];
+
+export function estimateRegistrationDate(userId: string) {
+  const id = Number(userId);
+  if (!Number.isFinite(id) || id <= 0) return undefined;
+
+  const toMonths = ([, year, month]: [number, number, number]) => year * MONTHS_IN_YEAR + month - 1;
+  const points = REGISTRATION_POINTS;
+  let months: number;
+
+  if (id <= points[0][0]) {
+    months = toMonths(points[0]);
+  } else if (id >= points[points.length - 1][0]) {
+    months = toMonths(points[points.length - 1]);
+  } else {
+    const nextIndex = points.findIndex(([pointId]) => pointId >= id);
+    const prev = points[nextIndex - 1];
+    const next = points[nextIndex];
+    const ratio = (id - prev[0]) / (next[0] - prev[0]);
+    months = Math.round(toMonths(prev) + ratio * (toMonths(next) - toMonths(prev)));
+  }
+
+  const isLatest = id >= points[points.length - 1][0];
+  const label = `${MONTH_NAMES[months % MONTHS_IN_YEAR]} ${Math.floor(months / MONTHS_IN_YEAR)}`;
+
+  return isLatest ? `после ${label}` : `≈ ${label}`;
+}
+
+const PANIC_OVERLAY_ID = 'timurgram-panic';
+
+export function showPanicOverlay() {
+  if (document.getElementById(PANIC_OVERLAY_ID)) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = PANIC_OVERLAY_ID;
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:var(--color-background, #fff);'
+    + 'display:flex;align-items:center;justify-content:center;color:var(--color-text-secondary, #888);'
+    + 'font-size:0.875rem;user-select:none;';
+  overlay.textContent = 'Дважды нажми, чтобы открыть';
+  overlay.addEventListener('dblclick', () => overlay.remove());
+  document.body.appendChild(overlay);
 }

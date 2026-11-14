@@ -5,11 +5,15 @@ import type { IconName } from '../../../types/icons';
 import type { TimurGramSettingKey } from '../../../util/timurgram';
 import { MAIN_THREAD_ID } from '../../../api/types';
 
+import { selectChat, selectUser } from '../../../global/selectors';
 import { selectThreadReadState } from '../../../global/selectors/threads';
 import {
   clearEditedNotes,
   cycleTimurGramAccentColor,
+  getIsTimurGramGhostMode,
+  setTimurGramGhostMode,
   setTimurGramSetting,
+  showPanicOverlay,
 } from '../../../util/timurgram';
 
 import useLastCallback from '../../../hooks/useLastCallback';
@@ -30,6 +34,8 @@ const SECTIONS: Section[] = [
       { key: 'hideOnline', icon: 'eye-crossed', title: 'Скрывать «онлайн»' },
       { key: 'hideTyping', icon: 'keyboard', title: 'Скрывать «печатает…»' },
       { key: 'hideRead', icon: 'message-read', title: 'Читать без галочек' },
+      { key: 'hideStoryViews', icon: 'eye-crossed-outline', title: 'Смотреть истории тайно' },
+      { key: 'hideListened', icon: 'eye-crossed-outline', title: 'Не отмечать «прослушано»' },
     ],
   },
   {
@@ -55,7 +61,7 @@ const SECTIONS: Section[] = [
 ];
 
 const TimurGramMenuItem = () => {
-  const { markChatMessagesRead, showNotification } = getActions();
+  const { markChatMessagesRead, showNotification, openChat } = getActions();
   const settings = useTimurGramSettings();
 
   const handleToggle = useLastCallback((e: React.SyntheticEvent<HTMLElement>, key: TimurGramSettingKey) => {
@@ -84,6 +90,24 @@ const TimurGramMenuItem = () => {
     showNotification({ message: count ? `Прочитано чатов: ${count}` : 'Непрочитанных чатов нет' });
   });
 
+  const handleGhostMode = useLastCallback((e: React.SyntheticEvent<HTMLElement>) => {
+    e.stopPropagation();
+    setTimurGramGhostMode(!getIsTimurGramGhostMode());
+  });
+
+  const handleOpenById = useLastCallback(() => {
+    const id = window.prompt('ID пользователя, группы или канала')?.trim();
+    if (!id) return;
+
+    const global = getGlobal();
+    if (!selectUser(global, id) && !selectChat(global, id)) {
+      showNotification({ message: 'Не найдено. Открыть можно только тех, кого клиент уже видел.' });
+      return;
+    }
+
+    openChat({ id });
+  });
+
   const handleClearEdits = useLastCallback(() => {
     clearEditedNotes();
     showNotification({ message: 'История правок очищена' });
@@ -94,6 +118,16 @@ const TimurGramMenuItem = () => {
       icon="eye-crossed"
       submenu={(
         <>
+          <MenuItem icon="eye-crossed" onClick={handleGhostMode}>
+            <span className="menu-item-name">Режим призрака (всё сразу)</span>
+            <Switcher
+              id="timurgram-ghost"
+              label="Режим призрака"
+              checked={getIsTimurGramGhostMode()}
+              noAnimation
+            />
+          </MenuItem>
+          <MenuSeparator />
           {SECTIONS.map(({ title, items }, index) => (
             <>
               {index > 0 && <MenuSeparator />}
@@ -116,6 +150,8 @@ const TimurGramMenuItem = () => {
             </>
           ))}
           <MenuItem icon="readchats" onClick={handleReadAll}>Прочитать все чаты</MenuItem>
+          <MenuItem icon="search" onClick={handleOpenById}>Открыть по ID</MenuItem>
+          <MenuItem icon="lock" onClick={showPanicOverlay}>Быстрое скрытие экрана</MenuItem>
           <MenuItem icon="darkmode" onClick={handleAccentClick}>
             <span className="menu-item-name">Цвет оформления</span>
             <span

@@ -70,13 +70,14 @@ import { getTranslationFn, type RegularLangFnParameters } from '../../../util/lo
 import { formatStarsAsText } from '../../../util/localization/format';
 import { debounce, onTickEnd, rafPromise } from '../../../util/schedulers';
 import { getServerTime } from '../../../util/serverTime';
-import { markOwnDeletedIds } from '../../../util/timurgram';
+import { getTimurGramSetting, markOwnDeletedIds } from '../../../util/timurgram';
 import { cancelVideoAttachmentProcessing, processVideoAttachment } from '../../../util/videoProcessingQueue';
 import { callApi, cancelApiProgress } from '../../../api/gramjs';
 import {
   getIsSavedDialog,
   getUserFullName,
   groupMessageIdsByThreadId,
+  hasMessageTtl,
   isChatChannel,
   isChatSuperGroup,
   isDeletedUser,
@@ -1735,7 +1736,15 @@ addActionHandler('markMessagesRead', async (global, actions, payload): Promise<v
   }
 
   const pendingIds = pendingMediaReadIdsByChat.get(chatId) || new Set<number>();
-  const unreadIds = messageIds.filter((id) => !pendingIds.has(id));
+  const shouldHideListened = getTimurGramSetting('hideListened');
+  const unreadIds = messageIds.filter((id) => {
+    if (pendingIds.has(id)) return false;
+    if (!shouldHideListened) return true;
+
+    // Self-destructing media still reports its opening to the sender
+    const message = selectChatMessage(global, chatId, id);
+    return Boolean(message && hasMessageTtl(message));
+  });
   if (!unreadIds.length) return;
 
   pendingMediaReadIdsByChat.set(chatId, pendingIds);

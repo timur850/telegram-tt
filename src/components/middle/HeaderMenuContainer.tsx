@@ -67,6 +67,7 @@ import MenuItem from '../ui/MenuItem';
 import MenuSeparator from '../ui/MenuSeparator';
 import NestedMenuItem from '../ui/NestedMenuItem';
 import Portal from '../ui/Portal';
+import { exportChatToText, showChatStats } from './timurgramChatTools';
 
 import './HeaderMenuContainer.scss';
 
@@ -274,6 +275,16 @@ const HeaderMenuContainer = ({
       reportMessages({ chatId, messageIds: [] });
     }
     onClose();
+  });
+
+  const handleExportChat = useLastCallback(() => {
+    closeMenu();
+    exportChatToText(chatId);
+  });
+
+  const handleChatStats = useLastCallback(() => {
+    closeMenu();
+    showChatStats(chatId);
   });
 
   const handleDelete = useLastCallback(() => {
@@ -912,6 +923,8 @@ const HeaderMenuContainer = ({
               {isBlocked ? lang('Unblock') : lang('NewContactBlock')}
             </MenuItem>
           )}
+          <MenuItem icon="download" onClick={handleExportChat}>Экспорт чата (.txt)</MenuItem>
+          <MenuItem icon="stats" onClick={handleChatStats}>Статистика чата</MenuItem>
           {canLeave && (
             <>
               <MenuSeparator />
