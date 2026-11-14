@@ -129,7 +129,7 @@ const TimurGramMenuItem = () => {
         </>
       )}
     >
-      NextGram
+      CheckGram
     </NestedMenuItem>
   );
 };
