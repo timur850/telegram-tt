@@ -1,0 +1,51 @@
+name: My web build
+
+# Собирает веб-версию и выкладывает её в ветку gh-pages.
+# Запускается при каждом push в master и вручную (Actions -> Run workflow).
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+concurrency:
+  group: my-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # Для веб-клиента ключи всё равно попадают в код сайта
+      TELEGRAM_API_ID: '38488754'
+      TELEGRAM_API_HASH: '6db935d7449a019f607a07ae63db389b'
+      BASE_URL: https://timur850.github.io/telegram-tt/
+      APP_TITLE: TimurGram
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build:production
+
+      - name: Prepare for GitHub Pages
+        run: touch dist/.nojekyll
+
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          force_orphan: true
