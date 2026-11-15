@@ -44,6 +44,7 @@ import { VTT_PROFILE_NOTE_COLLAPSE, VTT_PROFILE_NOTE_EXPAND } from '../../../uti
 import buildClassName from '../../../util/buildClassName';
 import { copyTextToClipboard } from '../../../util/clipboard';
 import { formatPhoneNumberWithCode } from '../../../util/phoneNumber';
+import { setVisualSendTarget } from '../../../util/visualProfile';
 import stopEvent from '../../../util/stopEvent';
 import { extractCurrentThemeParams } from '../../../util/themeStyle';
 import { estimateRegistrationDate } from '../../../util/timurgram';
@@ -168,8 +169,9 @@ const ChatExtra = ({
   const peerId = userId || chatId;
   const { showIds } = useTimurGramSettings();
   const visualProfile = useVisualProfile();
-  const visualGiftsText = isSelf && visualProfile.gifts.length
-    ? visualProfile.gifts.map((gift) => gift.title).join(', ')
+  const visualGifts = isSelf ? visualProfile.gifts : (userId && visualProfile.sent?.[userId]) || [];
+  const visualGiftsText = visualGifts.length
+    ? visualGifts.map((gift) => `${gift.emoji} ${gift.title}`).join('  ')
     : undefined;
   const registrationDate = showIds && userId ? estimateRegistrationDate(userId) : undefined;
   const {
@@ -469,6 +471,11 @@ const ChatExtra = ({
           <ListItem icon="mention-filled" iconBg="blue" multiline narrow>
             <span className="title">@{visualProfile.username}</span>
             <span className="subtitle">Username · CheckGram (визуально)</span>
+          </ListItem>
+        )}
+        {!isSelf && userId && (
+          <ListItem icon="gift" iconBg="orange" narrow ripple onClick={() => setVisualSendTarget(userId)}>
+            Отправить визуальный подарок · CheckGram
           </ListItem>
         )}
         {visualGiftsText && (

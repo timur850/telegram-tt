@@ -1,6 +1,6 @@
 import { useEffect, useState } from '../lib/teact/teact';
 
-import { getVisualProfile, subscribeToVisualProfile } from '../util/visualProfile';
+import { getVisualProfile, getVisualSendTarget, subscribeToVisualProfile } from '../util/visualProfile';
 
 export default function useVisualProfile() {
   const [visualProfile, setVisualProfile] = useState(getVisualProfile);
@@ -10,4 +10,14 @@ export default function useVisualProfile() {
   }), []);
 
   return visualProfile;
+}
+
+export function useVisualSendTarget() {
+  const [target, setTarget] = useState(getVisualSendTarget);
+
+  useEffect(() => subscribeToVisualProfile(() => {
+    setTarget(getVisualSendTarget());
+  }), []);
+
+  return target;
 }

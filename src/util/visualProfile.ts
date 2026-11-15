@@ -3,6 +3,7 @@ export type VisualCurrency = 'stars' | 'ton';
 
 export type VisualGift = {
   title: string;
+  emoji: string;
   price: number;
   currency: VisualCurrency;
 };
@@ -13,26 +14,28 @@ export type VisualProfile = {
   phone?: string;
   username?: string;
   gifts: VisualGift[];
+  // Gifts sent from this client to other users, by peer id
+  sent?: Record<string, VisualGift[]>;
 };
 
 const STORAGE_KEY = 'tt-visual-profile';
 const MAX_GIFTS = 30;
 
 export const VISUAL_GIFT_CATALOG: VisualGift[] = [
-  { title: 'Plush Pepe', price: 3000, currency: 'ton' },
-  { title: 'Heart Locket', price: 600, currency: 'ton' },
-  { title: "Durov's Cap", price: 400, currency: 'ton' },
-  { title: 'Precious Peach', price: 250, currency: 'ton' },
-  { title: 'Loot Bag', price: 100, currency: 'ton' },
-  { title: 'Delicious Cake', price: 50, currency: 'stars' },
-  { title: 'Green Star', price: 50, currency: 'stars' },
-  { title: 'Blue Star', price: 50, currency: 'stars' },
-  { title: 'Red Star', price: 50, currency: 'stars' },
-  { title: 'Bear', price: 15, currency: 'stars' },
-  { title: 'Heart', price: 15, currency: 'stars' },
-  { title: 'Trophy', price: 100, currency: 'stars' },
-  { title: 'Ring', price: 100, currency: 'stars' },
-  { title: 'Rocket', price: 50, currency: 'stars' },
+  { title: 'Plush Pepe', emoji: '🐸', price: 3000, currency: 'ton' },
+  { title: 'Heart Locket', emoji: '💝', price: 600, currency: 'ton' },
+  { title: "Durov's Cap", emoji: '🧢', price: 400, currency: 'ton' },
+  { title: 'Precious Peach', emoji: '🍑', price: 250, currency: 'ton' },
+  { title: 'Loot Bag', emoji: '🎒', price: 100, currency: 'ton' },
+  { title: 'Delicious Cake', emoji: '🎂', price: 50, currency: 'stars' },
+  { title: 'Green Star', emoji: '🟢', price: 50, currency: 'stars' },
+  { title: 'Blue Star', emoji: '🔷', price: 50, currency: 'stars' },
+  { title: 'Red Star', emoji: '🔴', price: 50, currency: 'stars' },
+  { title: 'Bear', emoji: '🧸', price: 15, currency: 'stars' },
+  { title: 'Heart', emoji: '💖', price: 15, currency: 'stars' },
+  { title: 'Trophy', emoji: '🏆', price: 100, currency: 'stars' },
+  { title: 'Ring', emoji: '💍', price: 100, currency: 'stars' },
+  { title: 'Rocket', emoji: '🚀', price: 50, currency: 'stars' },
 ];
 
 const EMPTY_PROFILE: VisualProfile = { stars: 0, ton: 0, gifts: [] };
@@ -73,6 +76,29 @@ export function buyVisualGift(gift: VisualGift) {
   const gifts = [...profile.gifts, gift];
   updateProfile(gift.currency === 'stars' ? { stars: balance, gifts } : { ton: balance, gifts });
   return true;
+}
+
+export function sendVisualGift(index: number, peerId: string) {
+  const gift = profile.gifts[index];
+  if (!gift) return false;
+
+  const sent = profile.sent || {};
+  updateProfile({
+    gifts: profile.gifts.filter((_, i) => i !== index),
+    sent: { ...sent, [peerId]: [...(sent[peerId] || []), gift] },
+  });
+  return true;
+}
+
+let sendTargetPeerId: string | undefined;
+
+export function getVisualSendTarget() {
+  return sendTargetPeerId;
+}
+
+export function setVisualSendTarget(peerId: string | undefined) {
+  sendTargetPeerId = peerId;
+  listeners.forEach((cb) => cb());
 }
 
 export function removeVisualGift(index: number) {
