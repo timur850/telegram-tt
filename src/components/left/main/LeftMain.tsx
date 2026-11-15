@@ -25,6 +25,7 @@ import Transition from '../../ui/Transition';
 import NewChatButton from '../NewChatButton';
 import LeftSearch from '../search/LeftSearch.async';
 import ChatFolders from './ChatFolders';
+import CheckGramPanel from './CheckGramPanel';
 import CommunityPanel from './community/CommunityPanel';
 import ContactList from './ContactList.async';
 import ForumPanel from './forum/ForumPanel';
@@ -274,6 +275,7 @@ const LeftMain = ({
       {IS_IOS && (content === LeftColumnContent.ChatList || content === LeftColumnContent.Contacts) && (
         <IosTabBar content={content} onReset={onReset} />
       )}
+      <CheckGramPanel />
       <NewChatButton
         isShown={isNewChatButtonShown}
         onNewPrivateChat={handleSelectContacts}

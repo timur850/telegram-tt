@@ -1,6 +1,6 @@
 import { useEffect, useState } from '../lib/teact/teact';
 
-import { getTimurGramSettings, subscribeToTimurGram } from '../util/timurgram';
+import { getIsCheckGramPanelOpen, getTimurGramSettings, subscribeToTimurGram } from '../util/timurgram';
 
 export default function useTimurGramSettings() {
   const [settings, setSettings] = useState(getTimurGramSettings);
@@ -10,4 +10,14 @@ export default function useTimurGramSettings() {
   }), []);
 
   return settings;
+}
+
+export function useIsCheckGramPanelOpen() {
+  const [isOpen, setIsOpen] = useState(getIsCheckGramPanelOpen);
+
+  useEffect(() => subscribeToTimurGram(() => {
+    setIsOpen(getIsCheckGramPanelOpen());
+  }), []);
+
+  return isOpen;
 }

@@ -281,3 +281,14 @@ export function getNativeAppIcon() {
 export function setNativeAppIcon(name: string) {
   (window as NativeWindow).webkit?.messageHandlers?.checkgram?.postMessage({ type: 'setIcon', name });
 }
+
+let isCheckGramPanelOpen = false;
+
+export function getIsCheckGramPanelOpen() {
+  return isCheckGramPanelOpen;
+}
+
+export function setCheckGramPanelOpen(isOpen: boolean) {
+  isCheckGramPanelOpen = isOpen;
+  listeners.forEach((cb) => cb());
+}

@@ -1,0 +1,83 @@
+.checkgram-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem 0.5rem;
+}
+
+.checkgram-icon-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+
+  cursor: var(--custom-cursor, pointer);
+
+  img {
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 0.125rem solid transparent;
+    border-radius: 0.75rem;
+  }
+
+  &.selected {
+    color: var(--color-primary);
+
+    img {
+      border-color: var(--color-primary);
+    }
+  }
+}
+
+.CheckGramPanel {
+  .modal-dialog {
+    max-width: 30rem;
+  }
+
+  .checkgram-content {
+    overflow-y: auto;
+    max-height: min(80dvh, 45rem);
+    padding: 0 0.5rem 1rem;
+  }
+}
+
+.checkgram-section {
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--color-borders);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .ListItem-button {
+    align-items: center;
+  }
+}
+
+.checkgram-section-title {
+  margin: 0.75rem 1rem 0.25rem;
+  font-size: 0.9375rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.checkgram-item-title {
+  flex-grow: 1;
+}
+
+.checkgram-color-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid var(--color-borders);
+  border-radius: 0.75rem;
+
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+}
