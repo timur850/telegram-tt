@@ -31,3 +31,12 @@
     }
   }
 }
+
+// The CheckGram submenu is taller than a phone screen, so it scrolls
+.checkgram-submenu .bubble {
+  touch-action: pan-y;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+
+  max-height: calc(100dvh - 4rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}

@@ -138,6 +138,7 @@ const TimurGramMenuItem = () => {
   return (
     <NestedMenuItem
       icon="eye-crossed"
+      submenuClassName="checkgram-submenu"
       submenu={(
         <>
           <MenuItem icon="eye-crossed" onClick={handleGhostMode}>
