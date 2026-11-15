@@ -59,6 +59,7 @@ import useEffectWithPrevDeps from '../../../hooks/useEffectWithPrevDeps';
 import useLang from '../../../hooks/useLang';
 import useLastCallback from '../../../hooks/useLastCallback';
 import useTimurGramSettings from '../../../hooks/useTimurGramSettings';
+import useVisualProfile from '../../../hooks/useVisualProfile';
 
 import Island, { IslandDescription } from '../../gili/layout/Island';
 import Switch from '../../gili/primitives/Switch';
@@ -166,6 +167,10 @@ const ChatExtra = ({
   const { id: chatId, usernames: chatUsernames } = chat || {};
   const peerId = userId || chatId;
   const { showIds } = useTimurGramSettings();
+  const visualProfile = useVisualProfile();
+  const visualGiftsText = isSelf && visualProfile.gifts.length
+    ? visualProfile.gifts.map((gift) => gift.title).join(', ')
+    : undefined;
   const registrationDate = showIds && userId ? estimateRegistrationDate(userId) : undefined;
   const {
     businessLocation,
@@ -454,6 +459,24 @@ const ChatExtra = ({
         </div>
       )}
       <Island>
+        {isSelf && Boolean(visualProfile.phone) && (
+          <ListItem icon="phone-filled" iconBg="green" multiline narrow>
+            <span className="title">{visualProfile.phone}</span>
+            <span className="subtitle">Phone · CheckGram (визуально)</span>
+          </ListItem>
+        )}
+        {isSelf && Boolean(visualProfile.username) && (
+          <ListItem icon="mention-filled" iconBg="blue" multiline narrow>
+            <span className="title">@{visualProfile.username}</span>
+            <span className="subtitle">Username · CheckGram (визуально)</span>
+          </ListItem>
+        )}
+        {visualGiftsText && (
+          <ListItem icon="gift-filled" iconBg="orange" multiline narrow>
+            <span className="title">{visualGiftsText}</span>
+            <span className="subtitle">Подарки · CheckGram (визуально)</span>
+          </ListItem>
+        )}
         {Boolean(formattedNumber?.length) && (
           <ListItem
             icon="phone-filled"

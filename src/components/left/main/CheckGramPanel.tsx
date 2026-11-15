@@ -3,6 +3,16 @@ import { getActions, getGlobal } from '../../../global';
 
 import type { IconName } from '../../../types/icons';
 import type { TimurGramSettingKey } from '../../../util/timurgram';
+import type { VisualCurrency, VisualGift } from '../../../util/visualProfile';
+import {
+  buyVisualGift,
+  removeVisualGift,
+  resetVisualProfile,
+  setVisualBalance,
+  setVisualPhone,
+  setVisualUsername,
+  VISUAL_GIFT_CATALOG,
+} from '../../../util/visualProfile';
 import { MAIN_THREAD_ID } from '../../../api/types';
 
 import { selectChat, selectUser } from '../../../global/selectors';
@@ -26,6 +36,7 @@ import {
 
 import useLastCallback from '../../../hooks/useLastCallback';
 import useTimurGramSettings, { useIsCheckGramPanelOpen } from '../../../hooks/useTimurGramSettings';
+import useVisualProfile from '../../../hooks/useVisualProfile';
 
 import ListItem from '../../ui/ListItem';
 import Modal from '../../ui/Modal';
@@ -80,6 +91,8 @@ const CheckGramPanel = () => {
   const settings = useTimurGramSettings();
   const isInNativeApp = getIsInNativeApp();
   const [appIcon, setAppIcon] = useState(getNativeAppIcon);
+  const visualProfile = useVisualProfile();
+  const [isGiftShopOpen, setIsGiftShopOpen] = useState(false);
 
   useEffect(() => {
     if (!isInNativeApp) return undefined;
@@ -142,6 +155,55 @@ const CheckGramPanel = () => {
     showNotification({ message: 'История правок очищена' });
   });
 
+  const handleSetBalance = useLastCallback((currency: VisualCurrency) => {
+    const name = currency === 'stars' ? 'звёзд' : 'TON';
+    const value = window.prompt(`Сколько ${name} показывать на балансе?`, String(visualProfile[currency]));
+    if (value === null) return;
+
+    const amount = Number(value.replace(',', '.'));
+    if (!Number.isFinite(amount) || amount < 0) {
+      showNotification({ message: 'Нужно число, например 10000' });
+      return;
+    }
+    setVisualBalance(currency, amount);
+  });
+
+  const handleSetPhone = useLastCallback(() => {
+    const value = window.prompt('Номер для профиля (например +888 0123 4567). Пусто — убрать.', visualProfile.phone || '');
+    if (value !== null) setVisualPhone(value);
+  });
+
+  const handleSetUsername = useLastCallback(() => {
+    const value = window.prompt('Юзернейм для профиля. Пусто — убрать.', visualProfile.username || '');
+    if (value !== null) setVisualUsername(value);
+  });
+
+  const handleOpenGiftShop = useLastCallback(() => {
+    setIsGiftShopOpen(true);
+  });
+
+  const handleCloseGiftShop = useLastCallback(() => {
+    setIsGiftShopOpen(false);
+  });
+
+  const handleBuyGift = useLastCallback((gift: VisualGift) => {
+    if (buyVisualGift(gift)) {
+      showNotification({ message: `Куплено: ${gift.title}` });
+    } else {
+      showNotification({ message: 'Не хватает визуального баланса' });
+    }
+  });
+
+  const handleRemoveGift = useLastCallback((index: number) => {
+    removeVisualGift(index);
+  });
+
+  const handleResetVisualProfile = useLastCallback(() => {
+    if (!window.confirm('Сбросить визуальный профиль, баланс и подарки?')) return;
+
+    resetVisualProfile();
+  });
+
   function renderToggle(key: TimurGramSettingKey | 'ghost', icon: IconName, title: string, isChecked: boolean) {
     return (
       <ListItem
@@ -157,6 +219,7 @@ const CheckGramPanel = () => {
   }
 
   return (
+    <>
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
@@ -190,6 +253,32 @@ const CheckGramPanel = () => {
         </ListItem>
         <ListItem icon="delete" ripple destructive onClick={handleClearEdits}>Очистить историю правок</ListItem>
       </div>
+      <div className="checkgram-section">
+        <h4 className="checkgram-section-title">💎 Визуальный профиль (виден только в CheckGram)</h4>
+        <ListItem icon="star" ripple onClick={() => handleSetBalance('stars')}>
+          <span className="checkgram-item-title">Баланс звёзд</span>
+          <span className="checkgram-value">{visualProfile.stars}</span>
+        </ListItem>
+        <ListItem icon="diamond" ripple onClick={() => handleSetBalance('ton')}>
+          <span className="checkgram-item-title">Баланс TON</span>
+          <span className="checkgram-value">{visualProfile.ton}</span>
+        </ListItem>
+        <ListItem icon="phone-filled" ripple onClick={handleSetPhone}>
+          <span className="checkgram-item-title">Номер в профиле</span>
+          <span className="checkgram-value">{visualProfile.phone || '—'}</span>
+        </ListItem>
+        <ListItem icon="mention-filled" ripple onClick={handleSetUsername}>
+          <span className="checkgram-item-title">Юзернейм в профиле</span>
+          <span className="checkgram-value">{visualProfile.username ? `@${visualProfile.username}` : '—'}</span>
+        </ListItem>
+        <ListItem icon="gift" ripple onClick={handleOpenGiftShop}>
+          <span className="checkgram-item-title">Купить подарок</span>
+          <span className="checkgram-value">{visualProfile.gifts.length}</span>
+        </ListItem>
+        <ListItem icon="delete" ripple destructive onClick={handleResetVisualProfile}>
+          Сбросить визуальный профиль
+        </ListItem>
+      </div>
       {isInNativeApp && (
         <div className="checkgram-section">
           <h4 className="checkgram-section-title">📱 Иконка приложения</h4>
@@ -210,6 +299,40 @@ const CheckGramPanel = () => {
         </div>
       )}
     </Modal>
+    <Modal
+      isOpen={isGiftShopOpen}
+      onClose={handleCloseGiftShop}
+      title="Визуальные подарки"
+      hasCloseButton
+      className="CheckGramPanel"
+      contentClassName="checkgram-content"
+    >
+      <div className="checkgram-section">
+        <h4 className="checkgram-section-title">
+          {`⭐ ${visualProfile.stars}  ·  TON ${visualProfile.ton}`}
+        </h4>
+        {VISUAL_GIFT_CATALOG.map((gift) => (
+          <ListItem key={gift.title} icon="gift" ripple onClick={() => handleBuyGift(gift)}>
+            <span className="checkgram-item-title">{gift.title}</span>
+            <span className="checkgram-value">
+              {gift.currency === 'ton' ? `${gift.price} TON` : `${gift.price} ⭐`}
+            </span>
+          </ListItem>
+        ))}
+      </div>
+      {Boolean(visualProfile.gifts.length) && (
+        <div className="checkgram-section">
+          <h4 className="checkgram-section-title">Мои визуальные подарки (нажми, чтобы убрать)</h4>
+          {visualProfile.gifts.map((gift, index) => (
+            // eslint-disable-next-line react/no-array-index-key
+            <ListItem key={`${gift.title}-${index}`} icon="gift-filled" ripple onClick={() => handleRemoveGift(index)}>
+              <span className="checkgram-item-title">{gift.title}</span>
+            </ListItem>
+          ))}
+        </div>
+      )}
+    </Modal>
+    </>
   );
 };
 
