@@ -21,6 +21,7 @@ import {
   setTimurGramGhostMode,
   setTimurGramSetting,
   showPanicOverlay,
+  triggerNativeHaptic,
 } from '../../../util/timurgram';
 
 import useLastCallback from '../../../hooks/useLastCallback';
@@ -93,6 +94,7 @@ const CheckGramPanel = () => {
   });
 
   const handleToggle = useLastCallback((key: TimurGramSettingKey) => {
+    triggerNativeHaptic();
     setTimurGramSetting(key, !settings[key]);
   });
 
@@ -117,6 +119,7 @@ const CheckGramPanel = () => {
   });
 
   const handleGhostMode = useLastCallback(() => {
+    triggerNativeHaptic('medium');
     setTimurGramGhostMode(!getIsTimurGramGhostMode());
   });
 

@@ -36,6 +36,8 @@ struct WebContainer: UIViewRepresentable {
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = false
+        webView.allowsLinkPreview = false
+        webView.scrollView.keyboardDismissMode = .interactive
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.isOpaque = false
         webView.backgroundColor = .systemBackground
@@ -56,6 +58,15 @@ struct WebContainer: UIViewRepresentable {
 
         func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
             guard let body = message.body as? [String: Any], let type = body["type"] as? String else { return }
+
+            if type == "haptic" {
+                switch body["style"] as? String {
+                case "selection": UISelectionFeedbackGenerator().selectionChanged()
+                case "medium": UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                default: UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                }
+                return
+            }
 
             if type == "setIcon" {
                 let name = body["name"] as? String ?? "Default"

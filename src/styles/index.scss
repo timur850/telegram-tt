@@ -588,3 +588,27 @@ body:not(.is-ios) {
   --color-forum-hover-unread-topic-hover: rgb(63, 63, 63);
   --color-chat-username: rgb(233, 238, 244);
 }
+
+// iOS: soft press feedback instead of Android-style ripples
+body.is-ios {
+  -webkit-tap-highlight-color: transparent;
+
+  .ripple-container {
+    display: none;
+  }
+
+  .ListItem-button,
+  .Button,
+  .MenuItem {
+    transition: background-color 0.2s ease-out, transform 0.15s ease-out, opacity 0.15s ease-out;
+  }
+
+  .ListItem-button:active {
+    background-color: var(--color-chat-hover);
+  }
+
+  .Button:active:not(.disabled) {
+    transform: scale(0.96);
+    opacity: 0.85;
+  }
+}

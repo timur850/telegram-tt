@@ -5,6 +5,7 @@ import type { IconName } from '../../../types/icons';
 import { LeftColumnContent } from '../../../types';
 
 import buildClassName from '../../../util/buildClassName';
+import { triggerNativeHaptic } from '../../../util/timurgram';
 
 import useLastCallback from '../../../hooks/useLastCallback';
 
@@ -30,6 +31,8 @@ const IosTabBar = ({ content, onReset }: OwnProps) => {
 
   const handleTabClick = useLastCallback((key: LeftColumnContent) => {
     if (key === content) return;
+
+    triggerNativeHaptic('selection');
 
     if (key === LeftColumnContent.ChatList) {
       onReset();

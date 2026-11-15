@@ -158,10 +158,10 @@ function applyAccentColor() {
     document.head.appendChild(styleElement);
   }
 
-  // Theme palettes are applied inline, so the override needs `!important` on every element
+  // Theme palettes are applied inline on the root element, so `!important` is needed to win
   const color = settings.accentColor;
   const variables = ACCENT_VARIABLES.map((name) => `${name}: ${color} !important;`).join(' ');
-  styleElement.textContent = `html, body, body * { ${variables} }`;
+  styleElement.textContent = `:root { ${variables} }`;
 }
 
 function buildNoteKey(chatId: string, messageId: number) {
@@ -291,4 +291,8 @@ export function getIsCheckGramPanelOpen() {
 export function setCheckGramPanelOpen(isOpen: boolean) {
   isCheckGramPanelOpen = isOpen;
   listeners.forEach((cb) => cb());
+}
+
+export function triggerNativeHaptic(style: 'light' | 'medium' | 'selection' = 'light') {
+  (window as NativeWindow).webkit?.messageHandlers?.checkgram?.postMessage({ type: 'haptic', style });
 }
