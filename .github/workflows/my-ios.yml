@@ -40,10 +40,12 @@ jobs:
         run: |
           mkdir -p Payload
           cp -R build/Build/Products/Release-iphoneos/CheckGram.app Payload/
-          zip -qr CheckGram.ipa Payload
+          VERSION=$(grep 'MARKETING_VERSION' project.yml | sed -E 's/.*"(.*)".*/\1/')
+          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
+          zip -qr "CheckGram-$VERSION.ipa" Payload
 
       - uses: actions/upload-artifact@v4
         with:
-          name: CheckGram-ipa
-          path: ios-app/CheckGram.ipa
+          name: CheckGram-${{ env.APP_VERSION }}-build${{ github.run_number }}
+          path: ios-app/CheckGram-*.ipa
           retention-days: 30
