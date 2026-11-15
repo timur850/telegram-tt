@@ -1,0 +1,49 @@
+name: My iOS app
+
+# Собирает приложение CheckGram (.ipa без подписи) для установки через SideStore.
+# Запуск: Actions -> "My iOS app" -> Run workflow, или автоматически при изменениях в ios-app/.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - 'ios-app/**'
+      - '.github/workflows/my-ios.yml'
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate project
+        working-directory: ios-app
+        run: xcodegen generate
+
+      - name: Build
+        working-directory: ios-app
+        run: |
+          xcodebuild -project CheckGram.xcodeproj -scheme CheckGram \
+            -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package IPA
+        working-directory: ios-app
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/CheckGram.app Payload/
+          zip -qr CheckGram.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CheckGram-ipa
+          path: ios-app/CheckGram.ipa
+          retention-days: 30

@@ -1,0 +1,32 @@
+name: CheckGram
+options:
+  bundleIdPrefix: com.timur850
+  deploymentTarget:
+    iOS: "16.0"
+targets:
+  CheckGram:
+    type: application
+    platform: iOS
+    sources: [CheckGram]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.timur850.checkgram
+        PRODUCT_NAME: CheckGram
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "1,2"
+        CODE_SIGNING_ALLOWED: NO
+        SWIFT_VERSION: "5.0"
+    info:
+      path: CheckGram/Info.plist
+      properties:
+        CFBundleDisplayName: CheckGram
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        WKAppBoundDomains: [timur850.github.io]
+        NSCameraUsageDescription: Чтобы отправлять фото и видео
+        NSMicrophoneUsageDescription: Чтобы записывать голосовые и кружки
+        NSPhotoLibraryUsageDescription: Чтобы выбирать фото для отправки
+        NSPhotoLibraryAddUsageDescription: Чтобы сохранять фото и видео
+        UIBackgroundModes: [audio]
