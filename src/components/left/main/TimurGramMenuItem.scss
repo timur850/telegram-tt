@@ -1,0 +1,33 @@
+.checkgram-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem 0.5rem;
+}
+
+.checkgram-icon-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+
+  cursor: var(--custom-cursor, pointer);
+
+  img {
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 0.125rem solid transparent;
+    border-radius: 0.75rem;
+  }
+
+  &.selected {
+    color: var(--color-primary);
+
+    img {
+      border-color: var(--color-primary);
+    }
+  }
+}

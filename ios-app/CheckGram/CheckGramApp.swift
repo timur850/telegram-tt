@@ -20,6 +20,13 @@ struct WebContainer: UIViewRepresentable {
 
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
+        // Bridge for the web app: `window.webkit.messageHandlers.checkgram.postMessage(...)`
+        config.userContentController.add(context.coordinator, name: "checkgram")
+        config.userContentController.addUserScript(WKUserScript(
+            source: "window.checkGramNative = { version: 1, icon: \(Coordinator.currentIconJSON()) };",
+            injectionTime: .atDocumentStart,
+            forMainFrameOnly: true
+        ))
         config.websiteDataStore = .default()
         config.allowsInlineMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
@@ -27,6 +34,7 @@ struct WebContainer: UIViewRepresentable {
         config.limitsNavigationsToAppBoundDomains = true
 
         let webView = WKWebView(frame: .zero, configuration: config)
+        context.coordinator.webView = webView
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = false
@@ -40,7 +48,33 @@ struct WebContainer: UIViewRepresentable {
 
     func updateUIView(_ webView: WKWebView, context: Context) {}
 
-    final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
+    final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
+        weak var webView: WKWebView?
+
+        static func currentIconJSON() -> String {
+            let name = UIApplication.shared.alternateIconName?.replacingOccurrences(of: "AppIcon-", with: "") ?? "Default"
+            return "\"\(name)\""
+        }
+
+        func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
+            guard let body = message.body as? [String: Any], let type = body["type"] as? String else { return }
+
+            if type == "setIcon" {
+                let name = body["name"] as? String ?? "Default"
+                let iconName = name == "Default" ? nil : "AppIcon-\(name)"
+                guard UIApplication.shared.supportsAlternateIcons else { return }
+
+                UIApplication.shared.setAlternateIconName(iconName) { [weak self] error in
+                    let result = error == nil ? Coordinator.currentIconJSON() : "null"
+                    DispatchQueue.main.async {
+                        self?.webView?.evaluateJavaScript(
+                            "window.checkGramNative.icon = \(result); window.dispatchEvent(new Event('checkgramicon'));"
+                        )
+                    }
+                }
+            }
+        }
+
         // Links to other sites open in Safari instead of replacing the app
         func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction,
                      decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {

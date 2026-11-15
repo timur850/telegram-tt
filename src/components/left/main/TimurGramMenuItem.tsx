@@ -1,4 +1,4 @@
-import { memo } from '../../../lib/teact/teact';
+import { memo, useEffect, useState } from '../../../lib/teact/teact';
 import { getActions, getGlobal } from '../../../global';
 
 import type { IconName } from '../../../types/icons';
@@ -8,10 +8,15 @@ import { MAIN_THREAD_ID } from '../../../api/types';
 import { selectChat, selectUser } from '../../../global/selectors';
 import { selectThreadReadState } from '../../../global/selectors/threads';
 import {
+  CHECKGRAM_APP_ICONS,
+  CHECKGRAM_ICON_EVENT,
   clearEditedNotes,
   cycleTimurGramAccentColor,
+  getIsInNativeApp,
   getIsTimurGramGhostMode,
+  getNativeAppIcon,
   setTimurGramGhostMode,
+  setNativeAppIcon,
   setTimurGramSetting,
   showPanicOverlay,
 } from '../../../util/timurgram';
@@ -23,6 +28,8 @@ import MenuItem from '../../ui/MenuItem';
 import MenuSeparator from '../../ui/MenuSeparator';
 import NestedMenuItem from '../../ui/NestedMenuItem';
 import Switcher from '../../ui/Switcher';
+
+import './TimurGramMenuItem.scss';
 
 type ToggleItem = { key: TimurGramSettingKey; icon: IconName; title: string };
 type Section = { title: string; items: ToggleItem[] };
@@ -63,6 +70,21 @@ const SECTIONS: Section[] = [
 const TimurGramMenuItem = () => {
   const { markChatMessagesRead, showNotification, openChat } = getActions();
   const settings = useTimurGramSettings();
+  const isInNativeApp = getIsInNativeApp();
+  const [appIcon, setAppIcon] = useState(getNativeAppIcon);
+
+  useEffect(() => {
+    if (!isInNativeApp) return undefined;
+
+    const handleIconChange = () => setAppIcon(getNativeAppIcon());
+    window.addEventListener(CHECKGRAM_ICON_EVENT, handleIconChange);
+    return () => window.removeEventListener(CHECKGRAM_ICON_EVENT, handleIconChange);
+  }, [isInNativeApp]);
+
+  const handleIconSelect = useLastCallback((e: React.SyntheticEvent<HTMLElement>, name: string) => {
+    e.stopPropagation();
+    setNativeAppIcon(name);
+  });
 
   const handleToggle = useLastCallback((e: React.SyntheticEvent<HTMLElement>, key: TimurGramSettingKey) => {
     e.stopPropagation();
@@ -149,6 +171,27 @@ const TimurGramMenuItem = () => {
               ))}
             </>
           ))}
+          {isInNativeApp && (
+            <>
+              <MenuSeparator />
+              <MenuItem disabled>📱 Иконка приложения</MenuItem>
+              <div className="checkgram-icon-grid">
+                {CHECKGRAM_APP_ICONS.map((name) => (
+                  <div
+                    key={name}
+                    className={`checkgram-icon-option${(appIcon || 'Default') === name ? ' selected' : ''}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => handleIconSelect(e, name)}
+                  >
+                    <img src={`./app-icons/${name.toLowerCase()}.png`} alt={name} draggable={false} />
+                    <span>{name}</span>
+                  </div>
+                ))}
+              </div>
+              <MenuSeparator />
+            </>
+          )}
           <MenuItem icon="readchats" onClick={handleReadAll}>Прочитать все чаты</MenuItem>
           <MenuItem icon="search" onClick={handleOpenById}>Открыть по ID</MenuItem>
           <MenuItem icon="lock" onClick={showPanicOverlay}>Быстрое скрытие экрана</MenuItem>

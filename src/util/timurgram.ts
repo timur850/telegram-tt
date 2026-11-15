@@ -259,3 +259,25 @@ export function setMutedPeerMode(peerId: string, mode: MutedPeerMode | undefined
   }
   writeJson(MUTED_STORAGE_KEY, mutedPeers);
 }
+
+type NativeWindow = Window & {
+  checkGramNative?: { version: number; icon?: string | null };
+  webkit?: { messageHandlers?: { checkgram?: { postMessage: (message: unknown) => void } } };
+};
+
+export const CHECKGRAM_APP_ICONS = [
+  'Default', 'Black', 'White', 'Night', 'Sky', 'Neon', 'Gold', 'Sunset', 'Mint', 'Titanium',
+] as const;
+export const CHECKGRAM_ICON_EVENT = 'checkgramicon';
+
+export function getIsInNativeApp() {
+  return Boolean((window as NativeWindow).webkit?.messageHandlers?.checkgram);
+}
+
+export function getNativeAppIcon() {
+  return (window as NativeWindow).checkGramNative?.icon || undefined;
+}
+
+export function setNativeAppIcon(name: string) {
+  (window as NativeWindow).webkit?.messageHandlers?.checkgram?.postMessage({ type: 'setIcon', name });
+}
