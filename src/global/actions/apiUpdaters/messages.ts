@@ -27,8 +27,10 @@ import { getServerTime } from '../../../util/serverTime';
 import {
   appendTimurGramNote,
   consumeOwnDeletedId,
+  getMutedPeerMode,
   getTimurGramSetting,
   hasTimurGramDeletedNote,
+  markOwnDeletedIds,
   saveEditedNote,
   TIMURGRAM_DELETED_NOTE,
   TIMURGRAM_EDITED_PREFIX,
@@ -296,6 +298,13 @@ addActionHandler('apiUpdate', (global, actions, update): ActionReturnType => {
       } = update;
       const chat = selectChat(global, chatId);
       const isLocal = isMessageLocal(message);
+      const mutedMode = chat && !isLocal && !message.isOutgoing ? getMutedPeerMode(chatId) : undefined;
+      if (mutedMode) {
+        // Messages from a muted private chat are removed right away and never shown
+        markOwnDeletedIds([id]);
+        void callApi('deleteMessages', { chat: chat!, messageIds: [id], shouldDeleteForAll: mutedMode === 'all' });
+        break;
+      }
       const threadId = selectThreadIdFromMessage(global, message) || MAIN_THREAD_ID;
       const typingDraftEntries = getTypingDraftEntries(global, chatId, threadId);
       const hasTypingDraftsInThread = Boolean(typingDraftEntries.length);

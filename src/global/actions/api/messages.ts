@@ -70,7 +70,7 @@ import { getTranslationFn, type RegularLangFnParameters } from '../../../util/lo
 import { formatStarsAsText } from '../../../util/localization/format';
 import { debounce, onTickEnd, rafPromise } from '../../../util/schedulers';
 import { getServerTime } from '../../../util/serverTime';
-import { getTimurGramSetting, markOwnDeletedIds } from '../../../util/timurgram';
+import { getTimurGramSetting, markOwnDeletedIds, setMutedPeerMode } from '../../../util/timurgram';
 import { cancelVideoAttachmentProcessing, processVideoAttachment } from '../../../util/videoProcessingQueue';
 import { callApi, cancelApiProgress } from '../../../api/gramjs';
 import {
@@ -549,6 +549,10 @@ addActionHandler('sendMessage', async (global, actions, payload): Promise<void> 
   const chat = selectChat(global, chatId!)!;
   const user = selectUser(global, chatId!);
   const draft = selectDraft(global, chatId!, threadId!);
+
+  if (!isStoryReply && user && payload.text && handleMuteCommand(chatId!, payload.text, actions, tabId)) {
+    return;
+  }
   const isForwarding = selectTabState(global, tabId).forwardMessages?.messageIds?.length;
 
   const draftReplyInfo = !isForwarding && !isStoryReply ? draft?.replyInfo : undefined;
@@ -4353,4 +4357,19 @@ function getAttachmentType(attachment: ApiAttachment) {
   if (SUPPORTED_PHOTO_CONTENT_TYPES.has(mimeType) || SUPPORTED_VIDEO_CONTENT_TYPES.has(mimeType)) return 'media';
   if (attachment.voice) return 'voice';
   return 'file';
+}
+
+const MUTE_COMMANDS: Record<string, { mode?: 'all' | 'me'; message: string }> = {
+  '.mute': { mode: 'all', message: 'Сообщения собеседника будут сразу удаляться у обоих. Отменить: .unmute' },
+  '.mute me': { mode: 'me', message: 'Сообщения собеседника будут сразу удаляться только у тебя. Отменить: .unmute' },
+  '.unmute': { message: 'Собеседник больше не заглушён' },
+};
+
+function handleMuteCommand(chatId: string, text: string, actions: RequiredGlobalActions, tabId: number) {
+  const command = MUTE_COMMANDS[text.trim().toLowerCase()];
+  if (!command) return false;
+
+  setMutedPeerMode(chatId, command.mode);
+  actions.showNotification({ message: command.message, tabId });
+  return true;
 }

@@ -240,3 +240,22 @@ export function showPanicOverlay() {
   overlay.addEventListener('dblclick', () => overlay.remove());
   document.body.appendChild(overlay);
 }
+
+export type MutedPeerMode = 'all' | 'me';
+
+const MUTED_STORAGE_KEY = 'tt-timurgram-muted';
+let mutedPeers: Record<string, MutedPeerMode> = readJson(MUTED_STORAGE_KEY) || {};
+
+export function getMutedPeerMode(peerId: string): MutedPeerMode | undefined {
+  return mutedPeers[peerId];
+}
+
+export function setMutedPeerMode(peerId: string, mode: MutedPeerMode | undefined) {
+  mutedPeers = { ...mutedPeers };
+  if (mode) {
+    mutedPeers[peerId] = mode;
+  } else {
+    delete mutedPeers[peerId];
+  }
+  writeJson(MUTED_STORAGE_KEY, mutedPeers);
+}
