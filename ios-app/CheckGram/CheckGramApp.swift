@@ -30,8 +30,6 @@ struct WebContainer: UIViewRepresentable {
         config.websiteDataStore = .default()
         config.allowsInlineMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
-        // App-bound domains let the site's service worker run inside the app
-        config.limitsNavigationsToAppBoundDomains = true
 
         let webView = WKWebView(frame: .zero, configuration: config)
         context.coordinator.webView = webView
@@ -79,6 +77,8 @@ struct WebContainer: UIViewRepresentable {
         func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction,
                      decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
             guard let url = action.request.url else { return decisionHandler(.allow) }
+            // Mini apps and embeds load in iframes from any site, so only the main page is restricted
+            guard action.targetFrame?.isMainFrame == true else { return decisionHandler(.allow) }
             let isAppPage = url.host == appHost || url.scheme == "about" || url.scheme == "blob" || url.scheme == "data"
             if isAppPage {
                 decisionHandler(.allow)
