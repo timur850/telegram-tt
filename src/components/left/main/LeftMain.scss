@@ -102,3 +102,14 @@
     }
   }
 }
+
+// Room for the floating iOS tab bar
+body.is-ios #LeftColumn-main {
+  .chat-list {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+
+  .NewChatButton {
+    bottom: calc(5.25rem + env(safe-area-inset-bottom));
+  }
+}

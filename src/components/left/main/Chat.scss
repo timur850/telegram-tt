@@ -476,3 +476,33 @@
     }
   }
 }
+
+// iOS look: taller rows with two-line previews, matching `CHAT_HEIGHT_PX`
+body.is-ios .Chat {
+  .ListItem-button {
+    height: 5rem;
+  }
+
+  &:not(.forum):not(.community):not(.chat-item-with-tags) {
+    .info .subtitle {
+      align-items: flex-start;
+      height: auto;
+    }
+
+    .last-message {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+
+      max-height: 2.5rem;
+
+      line-height: 1.25rem;
+      white-space: normal;
+    }
+
+    .last-message-summary {
+      display: inline;
+      white-space: normal;
+    }
+  }
+}

@@ -10,7 +10,7 @@ import { LeftColumnContent } from '../../../types';
 import { DEBUG } from '../../../config';
 import { selectCommunityPanelId } from '../../../global/selectors';
 import { IS_TAURI } from '../../../util/browser/globalEnvironment';
-import { IS_TOUCH_ENV } from '../../../util/browser/windowEnvironment';
+import { IS_IOS, IS_TOUCH_ENV } from '../../../util/browser/windowEnvironment';
 import buildClassName from '../../../util/buildClassName';
 
 import useSelector from '../../../hooks/data/useSelector';
@@ -28,6 +28,7 @@ import ChatFolders from './ChatFolders';
 import CommunityPanel from './community/CommunityPanel';
 import ContactList from './ContactList.async';
 import ForumPanel from './forum/ForumPanel';
+import IosTabBar from './IosTabBar';
 import LeftMainHeader from './LeftMainHeader';
 
 import './LeftMain.scss';
@@ -269,6 +270,9 @@ const LeftMain = ({
           onOpenAnimationStart={handleForumPanelAnimationStart}
           onCloseAnimationEnd={handleForumPanelAnimationEnd}
         />
+      )}
+      {IS_IOS && (content === LeftColumnContent.ChatList || content === LeftColumnContent.Contacts) && (
+        <IosTabBar content={content} onReset={onReset} />
       )}
       <NewChatButton
         isShown={isNewChatButtonShown}
